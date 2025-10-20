@@ -1,0 +1,1557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REGRET - Student Productivity Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d1117; /* Dark background matching the theme */
+        }
+        /* Custom Scrollbar for better aesthetics */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #374151; /* gray-700 */
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #4f46e5; /* indigo-600 */
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #6366f1; /* indigo-500 */
+        }
+        /* Style for the Chapter/Lesson structure */
+        .chapter-container {
+            border: 1px solid #374151;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-900 text-white">
+
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-gray-900 shadow-xl p-4 transition-transform duration-300 transform -translate-x-full lg:translate-x-0 flex flex-col">
+        <div class="flex justify-between items-center mb-10">
+            <h1 class="text-2xl font-black text-indigo-400 tracking-wider">REGRET HUB</h1>
+            <button class="lg:hidden text-gray-400 hover:text-white" onclick="toggleSidebar()">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+        </div>
+
+        <nav class="flex-1 space-y-2" id="nav-links">
+            </nav>
+
+        <div class="mt-auto pt-4 border-t border-gray-700" id="user-profile-section">
+            </div>
+    </aside>
+
+    <div class="lg:pl-64 flex flex-col min-h-screen">
+        <header class="lg:hidden sticky top-0 z-30 bg-gray-900/90 backdrop-blur-sm p-4 border-b border-gray-700 flex justify-between items-center">
+            <h1 class="text-xl font-black text-indigo-400 tracking-wider" id="mobile-view-title">Dashboard</h1>
+            <button class="text-gray-300 p-2 rounded-lg hover:bg-gray-800" onclick="toggleSidebar()">
+                <i data-lucide="menu" class="w-6 h-6"></i>
+            </button>
+        </header>
+
+        <main class="flex-1 overflow-y-auto pt-4 lg:pt-0" id="main-content">
+            <div class="p-6 text-center text-gray-400">Loading application...</div>
+        </main>
+    </div>
+
+    <div id="task-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4 hidden">
+        <div class="bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg p-6 transform transition-all duration-300 scale-95 opacity-0" id="task-modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-indigo-400" id="task-modal-title">Add New Task/Activity</h2>
+                <button onclick="closeTaskModal()" class="p-2 rounded-full text-gray-400 hover:bg-gray-700 hover:text-white transition duration-200">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            <form id="task-form" class="space-y-4">
+                <input type="hidden" id="task-id" />
+                <input type="text" id="task-title" placeholder="Task Title (e.g., Complete UI Design)" class="w-full p-3 bg-gray-700 text-gray-200 rounded-lg border border-gray-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition" required />
+                <textarea id="task-description" placeholder="Deep Details / Description..." rows="3" class="w-full p-3 bg-gray-700 text-gray-200 rounded-lg border border-gray-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"></textarea>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <label class="block">
+                        <span class="text-sm font-medium text-gray-400 block mb-1">Due Date</span>
+                        <input type="date" id="task-date" class="w-full p-3 bg-gray-700 text-gray-200 rounded-lg border border-gray-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition" required />
+                    </label>
+                    <label class="block">
+                        <span class="text-sm font-medium text-gray-400 block mb-1">Time</span>
+                        <input type="time" id="task-time" class="w-full p-3 bg-gray-700 text-gray-200 rounded-lg border border-gray-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition" />
+                    </label>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <label class="block">
+                        <span class="text-sm font-medium text-gray-400 block mb-1">Priority</span>
+                        <select id="task-priority" class="w-full p-3 bg-gray-700 text-gray-200 rounded-lg border border-gray-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition">
+                            <option value="High" class="bg-gray-700 text-red-400">High</option>
+                            <option value="Medium" class="bg-gray-700 text-yellow-400">Medium</option>
+                            <option value="Low" class="bg-gray-700 text-green-400">Low</option>
+                        </select>
+                    </label>
+                    <label class="block">
+                        <span class="text-sm font-medium text-gray-400 block mb-1">Link to a Goal</span>
+                        <select id="task-goal-link" class="w-full p-3 bg-gray-700 text-gray-200 rounded-lg border border-gray-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition">
+                            <option value="">-- No Goal Assigned (Daily Task) --</option>
+                            </select>
+                    </label>
+                </div>
+
+                <div class="pt-4 border-t border-gray-700">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-lg font-semibold text-gray-300">Sub-Tasks</h3>
+                        <button type="button" onclick="addSubTaskInput()" class="flex items-center py-1 px-3 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded-lg transition">
+                            <i data-lucide="plus" class="w-4 h-4 mr-1"></i> New Sub-Task
+                        </button>
+                    </div>
+                    <div id="subtask-inputs" class="space-y-2">
+                        </div>
+                </div>
+
+                <button type="submit" class="w-full mt-6 py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-lg transition duration-200 transform hover:scale-[1.01]">
+                    Save Task
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <div id="goal-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4 hidden">
+        <div class="bg-gray-800 rounded-xl shadow-2xl w-full max-w-2xl p-6 transform transition-all duration-300 scale-95 opacity-0" id="goal-modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-indigo-400" id="goal-modal-title">Define New Learning Goal</h2>
+                <button onclick="closeGoalModal()" class="p-2 rounded-full text-gray-400 hover:bg-gray-700 hover:text-white transition duration-200">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            <form id="goal-form" class="space-y-4">
+                <input type="hidden" id="goal-id" />
+                <input type="text" id="goal-title" placeholder="Goal Title (e.g., Master Unity 3D Game Dev)" class="w-full p-3 bg-gray-700 text-gray-200 rounded-lg border border-gray-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition" required />
+                <textarea id="goal-description" placeholder="Goal Description / Motivation..." rows="3" class="w-full p-3 bg-gray-700 text-gray-200 rounded-lg border border-gray-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"></textarea>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <label class="block">
+                        <span class="text-sm font-medium text-gray-400 block mb-1">Target Date</span>
+                        <input type="date" id="goal-target-date" class="w-full p-3 bg-gray-700 text-gray-200 rounded-lg border border-gray-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition" required />
+                    </label>
+                    <label class="block">
+                        <span class="text-sm font-medium text-gray-400 block mb-1">Category (e.g., Game Dev)</span>
+                        <input type="text" id="goal-category" placeholder="Category" class="w-full p-3 bg-gray-700 text-gray-200 rounded-lg border border-gray-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition" value="Game Dev" required />
+                    </label>
+                </div>
+
+                <div class="pt-4 border-t border-gray-700 space-y-4">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-xl font-semibold text-indigo-400">Learning Path (Chapters/Lessons)</h3>
+                        <button type="button" onclick="addChapterInput()" class="flex items-center py-2 px-3 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded-lg transition">
+                            <i data-lucide="book-open" class="w-4 h-4 mr-1"></i> Add Chapter
+                        </button>
+                    </div>
+                    <div id="chapter-inputs" class="space-y-4">
+                        </div>
+                </div>
+                
+                <button type="submit" class="w-full mt-6 py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-lg transition duration-200 transform hover:scale-[1.01]">
+                    Save Goal
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div id="login-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4 hidden">
+        <div class="bg-gray-800 rounded-xl shadow-2xl w-full max-w-sm p-6 transform transition-all duration-300 scale-95 opacity-0" id="login-modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-indigo-400">Student Login</h2>
+                <button onclick="closeLoginModal()" class="p-2 rounded-full text-gray-400 hover:bg-gray-700 hover:text-white transition duration-200">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            <form id="login-form" class="space-y-4">
+                <input type="text" id="login-username" placeholder="Username" class="w-full p-3 bg-gray-700 text-gray-200 rounded-lg border border-gray-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition" required />
+                <input type="password" id="login-password" placeholder="Password" class="w-full p-3 bg-gray-700 text-gray-200 rounded-lg border border-gray-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition" required />
+                
+                <button type="submit" class="w-full mt-6 py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-lg transition duration-200 transform hover:scale-[1.01]">
+                    Log In
+                </button>
+            </form>
+            <p class="mt-4 text-center text-sm text-gray-400">
+                New user? <button onclick="closeLoginModal(); openSignupModal();" class="text-indigo-400 hover:text-indigo-300 font-medium">Create Account</button>
+            </p>
+        </div>
+    </div>
+
+    <div id="signup-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4 hidden">
+        <div class="bg-gray-800 rounded-xl shadow-2xl w-full max-w-sm p-6 transform transition-all duration-300 scale-95 opacity-0" id="signup-modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-indigo-400">Student Signup</h2>
+                <button onclick="closeSignupModal()" class="p-2 rounded-full text-gray-400 hover:bg-gray-700 hover:text-white transition duration-200">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            <form id="signup-form" class="space-y-4">
+                <input type="text" id="signup-username" placeholder="Choose Username" class="w-full p-3 bg-gray-700 text-gray-200 rounded-lg border border-gray-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition" required />
+                <input type="password" id="signup-password" placeholder="Choose Password (min 6 chars)" class="w-full p-3 bg-gray-700 text-gray-200 rounded-lg border border-gray-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition" required />
+                
+                <button type="submit" class="w-full mt-6 py-3 px-4 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-lg transition duration-200 transform hover:scale-[1.01]">
+                    Create Account
+                </button>
+            </form>
+            <p class="mt-4 text-center text-sm text-gray-400">
+                Already have an account? <button onclick="closeSignupModal(); openLoginModal();" class="text-indigo-400 hover:text-indigo-300 font-medium">Log In</button>
+            </p>
+        </div>
+    </div>
+
+
+    <script>
+        // --- CONFIGURATION & STATE ---
+        const API_BASE_URL = 'http://localhost:5000/api'; 
+        
+        // Frontend State
+        window.tasks = [];
+        window.goals = [];
+        window.courses = [
+            // Mock Course data (Courses API is not yet built on the backend)
+            { id: 1, title: 'Advanced Web Development', price: 99, isBought: true, progress: 65, totalLectures: 30, completedLectures: 20, nextUp: 'Lecture 21: Redux Fundamentals', 
+              description: 'A comprehensive deep dive into modern web technologies including React, Node.js, and advanced data structures.',
+              image: 'https://placehold.co/800x400/1e293b/d1d5db?text=Web+Dev+Course',
+              modules: [
+                  { title: "React Fundamentals", lectures: 10 },
+                  { title: "Node.js & Express", lectures: 10 },
+                  { title: "Database Integration (MDB)", lectures: 10 }
+              ]
+            },
+            { id: 2, title: 'Database Systems (DBMS)', price: 49, isBought: false, progress: 0, totalLectures: 20, completedLectures: 0, nextUp: 'Introduction to SQL', 
+              description: 'Learn relational algebra, normalization, and advanced querying techniques.',
+              image: 'https://placehold.co/800x400/0f172a/94a3b8?text=DBMS+Course',
+              modules: [
+                  { title: "SQL Basics", lectures: 5 },
+                  { title: "Normalization", lectures: 5 },
+                  { title: "Advanced Joins", lectures: 10 }
+              ]
+            },
+        ];
+
+        // Auth State (Loaded from localStorage)
+        window.authToken = localStorage.getItem('authToken') || null;
+        window.userId = localStorage.getItem('userId') || null;
+        window.username = localStorage.getItem('username') || 'Guest';
+
+        // Navigation state
+        let activeView = 'Dashboard';
+        let currentCourseId = null;
+        let currentGoalId = null;
+        let isSidebarOpen = false;
+        
+        // Dynamic counter for adding/editing chapters/lessons in the Goal Modal
+        let chapterCounter = 0;
+
+        const navigation = [
+            { name: 'Dashboard', icon: 'home' },
+            { name: 'My Tasks', icon: 'check-circle' },
+            { name: 'Courses', icon: 'book-open' }, 
+            { name: 'Goals', icon: 'target' },
+            { name: 'Content Library', icon: 'folder-open' },
+        ];
+
+
+        // --- API WRAPPER FUNCTION ---
+        const apiFetch = async (url, options = {}) => {
+            const defaultHeaders = { 'Content-Type': 'application/json' };
+            
+            if (window.authToken && !url.includes('/auth/')) {
+                defaultHeaders['x-auth-token'] = window.authToken;
+            }
+
+            options.headers = { ...defaultHeaders, ...options.headers };
+            let response;
+            
+            try {
+                response = await fetch(url, options);
+            } catch (error) {
+                console.error("Network or Fetch Error:", error);
+                throw new Error("Could not connect to the backend server (Is Node.js running on port 5000?).");
+            }
+            
+            if (response.status === 401) {
+                handleLogout();
+                alert('Your session has expired. Please log in again.');
+                return;
+            }
+            
+            if (options.method === 'DELETE' && response.status === 200) {
+                 return {};
+            }
+            if (response.status === 204) { // No Content status for successful deletions/updates
+                return {};
+            }
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || `API Error: ${response.status} - ${response.statusText}`);
+            }
+
+            return response.json();
+        };
+
+        // --- AUTHENTICATION FUNCTIONS ---
+        const handleLogin = async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+            try {
+                const data = await apiFetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    body: JSON.stringify({ username, password }),
+                });
+                window.authToken = data.token;
+                window.userId = data.userId;
+                window.username = data.username;
+                localStorage.setItem('authToken', data.token);
+                localStorage.setItem('userId', data.userId);
+                localStorage.setItem('username', data.username);
+                closeLoginModal();
+                alert(`Welcome back, ${data.username}!`);
+                await fetchDataAndRender();
+            } catch (error) {
+                alert(error.message);
+            }
+        };
+
+        const handleSignup = async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('signup-username').value;
+            const password = document.getElementById('signup-password').value;
+            try {
+                const data = await apiFetch(`${API_BASE_URL}/auth/signup`, {
+                    method: 'POST',
+                    body: JSON.stringify({ username, password }),
+                });
+                window.authToken = data.token;
+                window.userId = data.userId;
+                window.username = data.username;
+                localStorage.setItem('authToken', data.token);
+                localStorage.setItem('userId', data.userId);
+                localStorage.setItem('username', data.username);
+                closeSignupModal();
+                alert(`Account created! Welcome, ${data.username}!`);
+                await fetchDataAndRender();
+            } catch (error) {
+                alert(error.message);
+            }
+        };
+
+        window.handleLogout = () => {
+            window.authToken = null;
+            window.userId = null;
+            window.username = 'Guest';
+            localStorage.clear(); 
+            window.tasks = []; 
+            window.goals = [];
+            alert('You have been logged out.');
+            activeView = 'Dashboard'; 
+            renderApp();
+        };
+
+
+        // --- DATA FETCHING ---
+        const fetchDataAndRender = async () => {
+            if (!window.authToken) {
+                window.tasks = [];
+                window.goals = [];
+                renderApp(); 
+                return;
+            }
+
+            try {
+                // 1. Fetch Goals
+                const goalsData = await apiFetch(`${API_BASE_URL}/goals`);
+                window.goals = goalsData.map(g => ({
+                    id: g._id, 
+                    title: g.title, 
+                    description: g.description, 
+                    targetDate: g.targetDate.split('T')[0],
+                    progress: g.progressPercentage, 
+                    status: g.status,
+                    category: g.category,
+                    // Map Mongoose _id to id for lessons/chapters
+                    chapters: g.chapters.map(c => ({
+                        id: c._id,
+                        title: c.title,
+                        order: c.order,
+                        lessons: c.lessons.map(l => ({
+                            id: l._id,
+                            title: l.title,
+                            completed: l.completed,
+                        }))
+                    }))
+                }));
+
+                // 2. Fetch Tasks
+                const tasksData = await apiFetch(`${API_BASE_URL}/tasks`);
+                window.tasks = tasksData.map(t => ({
+                    id: t._id,
+                    title: t.title,
+                    description: t.description,
+                    goalId: t.goalId, 
+                    date: t.scheduleDate.split('T')[0], 
+                    time: t.scheduleDate.split('T')[1]?.substring(0, 5) || '', 
+                    priority: t.priority,
+                    completed: t.completed,
+                    subTasks: t.subTasks.map(st => ({
+                        id: st._id,
+                        title: st.title,
+                        completed: st.completed
+                    }))
+                }));
+
+            } catch (error) {
+                console.error("Failed to fetch data:", error);
+                if (window.authToken) {
+                    alert(`Error fetching user data: ${error.message}`);
+                }
+            } finally {
+                renderApp();
+            }
+        };
+
+        /** Toggles the completion status of a main task or a sub-task via API. */
+        window.toggleTaskCompletion = async (taskId, subTaskId = null) => {
+            if (!window.authToken) return alert('Please log in to update tasks.');
+            
+            try {
+                const type = subTaskId ? 'sub' : 'main';
+                
+                await apiFetch(`${API_BASE_URL}/tasks/${taskId}/complete`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ type, subTaskId })
+                });
+
+                await fetchDataAndRender();
+
+            } catch (error) {
+                alert(`Failed to update task: ${error.message}`);
+            }
+        };
+
+        /** Deletes a Task via API. */
+        window.deleteTask = async (taskId, title) => {
+            if (!window.authToken) return;
+            // Using confirm for simplicity, would be a custom modal in production
+            if (!confirm(`Are you sure you want to permanently delete the task: "${title}"?`)) {
+                return;
+            }
+            try {
+                // API Call: DELETE /api/tasks/:id
+                await apiFetch(`${API_BASE_URL}/tasks/${taskId}`, {
+                    method: 'DELETE'
+                });
+                alert(`Task "${title}" deleted successfully.`);
+                await fetchDataAndRender(); 
+            } catch (error) {
+                alert(`Error deleting task: ${error.message}`);
+            }
+        };
+        
+        /** Toggles Lesson completion status and updates Goal progress via API. */
+        window.toggleLessonCompletion = async (goalId, chapterId, lessonId) => {
+            if (!window.authToken) return alert('Please log in to update goals.');
+            
+            try {
+                // API Call: PATCH /api/goals/:goalId/lesson/:chapterId/:lessonId/complete
+                await apiFetch(`${API_BASE_URL}/goals/${goalId}/lesson/${chapterId}/${lessonId}/complete`, {
+                    method: 'PATCH',
+                });
+                
+                // Re-fetch data to update UI and ensure Goal progress is refreshed
+                await fetchDataAndRender();
+
+            } catch (error) {
+                alert(`Failed to update lesson: ${error.message}`);
+            }
+        };
+
+
+        // --- DYNAMIC FORM FUNCTIONS (Chapters/Lessons) ---
+
+        window.addChapterInput = (chapter = { title: '', lessons: [], id: null }) => {
+            chapterCounter++;
+            // Use existing MongoDB _id if present, otherwise use a temporary UI ID
+            const chapterId = chapter.id || `chapter-temp-${chapterCounter}`; 
+            const container = document.getElementById('chapter-inputs');
+            
+            const chapterHtml = `
+                <div class="chapter-container bg-gray-700/50" data-chapter-id="${chapterId}">
+                    <div class="flex justify-between items-center mb-3">
+                        <input type="text" name="chapter-title" value="${chapter.title}" placeholder="Chapter Title (e.g., Physics Fundamentals)" class="w-2/3 p-2 bg-gray-600 text-white rounded-lg border border-gray-500" required />
+                        <input type="hidden" name="chapter-mongodb-id" value="${chapter.id || ''}" />
+                        <div class="flex space-x-2">
+                            <button type="button" onclick="addLessonInput('${chapterId}')" class="py-1 px-3 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg flex items-center">
+                                <i data-lucide="plus" class="w-4 h-4 mr-1"></i> Lesson
+                            </button>
+                            <button type="button" onclick="document.querySelector('[data-chapter-id=&quot;${chapterId}&quot;]').remove();" class="p-2 text-red-400 hover:bg-red-900/50 rounded-lg">
+                                <i data-lucide="trash-2" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="space-y-2 pl-4 border-l border-gray-500" data-lesson-container-id="${chapterId}">
+                        </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', chapterHtml);
+            
+            // Re-populate lessons if editing
+            chapter.lessons.forEach(lesson => addLessonInput(chapterId, lesson));
+            lucide.createIcons();
+        };
+
+        window.addLessonInput = (chapterId, lesson = { title: '', id: null }) => {
+            // Use existing MongoDB _id if present, otherwise use a temporary UI ID
+            const lessonId = lesson.id || `lesson-temp-${Date.now() + Math.random()}`; 
+            const container = document.querySelector(`[data-lesson-container-id="${chapterId}"]`);
+            
+            const lessonHtml = `
+                <div class="flex items-center space-x-2" data-lesson-id="${lessonId}">
+                    <i data-lucide="dot" class="w-5 h-5 text-indigo-400 flex-shrink-0"></i>
+                    <input type="text" name="lesson-title" value="${lesson.title}" placeholder="Lesson Title" class="w-full p-2 bg-gray-700 text-gray-200 rounded-lg border border-gray-600" required />
+                    <input type="hidden" name="lesson-mongodb-id" value="${lesson.id || ''}" />
+                    <button type="button" onclick="document.querySelector('[data-lesson-id=&quot;${lessonId}&quot;]').remove();" class="p-2 text-red-400 hover:bg-red-900/50 rounded-lg flex-shrink-0">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', lessonHtml);
+            lucide.createIcons();
+        };
+
+        // --- MODAL FUNCTIONS (Common) ---
+
+        // FIX: openTaskModal defined globally
+        window.openTaskModal = () => {
+            if (!window.authToken) return alert('Please log in to create tasks.');
+            
+            // Populate goal dropdown before opening
+            const goalSelect = document.getElementById('task-goal-link');
+            goalSelect.innerHTML = '<option value="">-- No Goal Assigned (Daily Task) --</option>';
+            window.goals.forEach(goal => {
+                const option = document.createElement('option');
+                option.value = goal.id; // Use MongoDB _id
+                option.textContent = goal.title;
+                goalSelect.appendChild(option);
+            });
+            
+            // Clear sub-task inputs
+            document.getElementById('subtask-inputs').innerHTML = '';
+            
+            const modal = document.getElementById('task-modal');
+            const content = document.getElementById('task-modal-content');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        };
+
+        window.closeTaskModal = () => { 
+            const modal = document.getElementById('task-modal');
+            const content = document.getElementById('task-modal-content');
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                document.getElementById('task-form').reset();
+            }, 300); 
+        };
+
+        window.openGoalModal = (goalToEdit = null) => {
+            if (!window.authToken) return alert('Please log in to define goals.');
+            
+            // Reset modal state
+            document.getElementById('goal-form').reset();
+            document.getElementById('goal-id').value = '';
+            document.getElementById('chapter-inputs').innerHTML = '';
+            document.getElementById('goal-modal-title').textContent = 'Define New Learning Goal';
+
+            if (goalToEdit) {
+                document.getElementById('goal-modal-title').textContent = 'Edit Goal: ' + goalToEdit.title;
+                document.getElementById('goal-id').value = goalToEdit.id;
+                document.getElementById('goal-title').value = goalToEdit.title;
+                document.getElementById('goal-description').value = goalToEdit.description;
+                document.getElementById('goal-target-date').value = goalToEdit.targetDate;
+                document.getElementById('goal-category').value = goalToEdit.category || 'General';
+                
+                // Populate existing chapters/lessons
+                goalToEdit.chapters.forEach(chapter => addChapterInput(chapter));
+            } else {
+                 // Add an initial empty chapter for new goals
+                 addChapterInput({ title: 'Chapter 1: Fundamentals', lessons: [{title: 'Introduction'}] });
+            }
+
+            const modal = document.getElementById('goal-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => document.getElementById('goal-modal-content').classList.remove('scale-95', 'opacity-0'), 10);
+        };
+        
+        window.closeGoalModal = () => { 
+            const modal = document.getElementById('goal-modal');
+            const content = document.getElementById('goal-modal-content');
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                document.getElementById('goal-form').reset();
+            }, 300); 
+        };
+
+        window.deleteGoal = async (goalId, title) => {
+            if (!window.authToken) return;
+            // Using confirm for simplicity, would be a custom modal in production
+            if (!confirm(`Are you sure you want to permanently delete the goal: "${title}"? This cannot be undone.`)) {
+                return;
+            }
+            try {
+                // API Call: DELETE /api/goals/:id
+                await apiFetch(`${API_BASE_URL}/goals/${goalId}`, {
+                    method: 'DELETE'
+                });
+                alert(`Goal "${title}" deleted successfully.`);
+                await fetchDataAndRender(); 
+                window.setView('Goals');
+            } catch (error) {
+                alert(`Error deleting goal: ${error.message}`);
+            }
+        };
+
+        // --- AUTH MODAL FUNCTIONS ---
+        window.openLoginModal = () => { 
+            document.getElementById('login-modal').classList.remove('hidden');
+            document.getElementById('login-modal-content').classList.remove('scale-95', 'opacity-0');
+            document.getElementById('login-modal-content').classList.add('scale-100', 'opacity-100');
+        };
+        window.closeLoginModal = () => { 
+            const content = document.getElementById('login-modal-content');
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                document.getElementById('login-modal').classList.add('hidden');
+                document.getElementById('login-form').reset();
+            }, 300); 
+        };
+        window.openSignupModal = () => { 
+            document.getElementById('signup-modal').classList.remove('hidden');
+            document.getElementById('signup-modal-content').classList.remove('scale-95', 'opacity-0');
+            document.getElementById('signup-modal-content').classList.add('scale-100', 'opacity-100');
+        };
+        window.closeSignupModal = () => { 
+            const content = document.getElementById('signup-modal-content');
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                document.getElementById('signup-modal').classList.add('hidden');
+                document.getElementById('signup-form').reset();
+            }, 300); 
+        };
+        
+        // --- FORM SUBMISSIONS (API Calls) ---
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            // ... (Auth forms remain the same) ...
+            document.getElementById('login-form')?.addEventListener('submit', handleLogin);
+            document.getElementById('signup-form')?.addEventListener('submit', handleSignup);
+            
+            // --- Task Form Submission ---
+            const taskForm = document.getElementById('task-form');
+            if (taskForm) {
+                taskForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    if (!window.authToken) return alert('Please log in to create tasks.');
+                    
+                    const subTaskElements = document.querySelectorAll('#subtask-inputs input[name="subtask"]');
+                    const subTasks = Array.from(subTaskElements)
+                        .map(input => ({ title: input.value.trim(), completed: false }))
+                        .filter(st => st.title.length > 0);
+                        
+                    const goalId = document.getElementById('task-goal-link').value;
+                    const taskDate = document.getElementById('task-date').value;
+                    const taskTime = document.getElementById('task-time').value;
+
+                    // 1. Validate Date
+                    if (!taskDate) {
+                         return alert('Please select a Due Date for the task.');
+                    }
+                    
+                    // 2. Format Schedule Date Robustly (ISO format for MongoDB)
+                    const scheduleDate = taskTime ? `${taskDate}T${taskTime}:00.000Z` : `${taskDate}T00:00:00.000Z`;
+
+                    const newTaskData = {
+                        title: document.getElementById('task-title').value,
+                        description: document.getElementById('task-description').value,
+                        goalId: goalId || null, 
+                        scheduleDate: scheduleDate, // Send the validated ISO string
+                        priority: document.getElementById('task-priority').value,
+                        subTasks: subTasks 
+                    };
+
+                    try {
+                        // API Call: POST /api/tasks
+                        await apiFetch(`${API_BASE_URL}/tasks`, {
+                            method: 'POST',
+                            body: JSON.stringify(newTaskData)
+                        });
+
+                        document.getElementById('task-form').reset();
+                        window.closeTaskModal();
+                        await fetchDataAndRender(); // Fetch new list and re-render
+                        
+                    } catch (error) {
+                        alert(`Error creating task: ${error.message}`);
+                    }
+                });
+            }
+            
+            // --- Goal Form Submission (FIXED UPDATE LOGIC) ---
+            const goalForm = document.getElementById('goal-form');
+            if (goalForm) {
+                goalForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    if (!window.authToken) return alert('Please log in to define goals.');
+                    
+                    const goalId = document.getElementById('goal-id').value;
+                    
+                    // 1. Gather all Chapters and Lessons from the dynamic UI
+                    const chapterElements = document.querySelectorAll('#chapter-inputs > .chapter-container');
+                    const chapters = Array.from(chapterElements).map((chapterEl, chapterIndex) => {
+                        const chapterTitle = chapterEl.querySelector('input[name="chapter-title"]').value;
+                        
+                        // FIX 1: Retrieve the MongoDB ID for the chapter
+                        const chapterMongoIdInput = chapterEl.querySelector('input[name="chapter-mongodb-id"]');
+                        const chapterMongoId = chapterMongoIdInput ? chapterMongoIdInput.value : null; 
+
+                        const lessonElements = chapterEl.querySelectorAll('[data-lesson-container-id] input[name="lesson-title"]');
+                        
+                        const lessons = Array.from(lessonElements).map(lessonInput => {
+                            // FIX 2: Retrieve the MongoDB ID for the lesson (it's the next sibling input field)
+                            const lessonMongoIdInput = lessonInput.nextElementSibling;
+                            const lessonMongoId = lessonMongoIdInput ? lessonMongoIdInput.value : null; 
+                            
+                            return {
+                                // IMPORTANT: Include existing MongoDB ID for editing/deleting nested docs
+                                ...(lessonMongoId && { _id: lessonMongoId }),
+                                title: lessonInput.value, 
+                            };
+                        }).filter(l => l.title.length > 0);
+                        
+                        return {
+                            // IMPORTANT: Include existing MongoDB ID for editing
+                            ...(chapterMongoId && { _id: chapterMongoId }), 
+                            title: chapterTitle,
+                            order: chapterIndex,
+                            lessons: lessons
+                        };
+                    }).filter(c => c.title.length > 0 && c.lessons.length > 0); 
+
+                    if (chapters.length === 0) {
+                         return alert('Please define at least one chapter with at least one lesson.');
+                    }
+
+                    const goalData = {
+                        title: document.getElementById('goal-title').value,
+                        description: document.getElementById('goal-description').value,
+                        targetDate: document.getElementById('goal-target-date').value,
+                        category: document.getElementById('goal-category').value,
+                        chapters: chapters
+                    };
+
+                    try {
+                        let method = 'POST';
+                        let url = `${API_BASE_URL}/goals`;
+                        
+                        if (goalId) {
+                            method = 'PUT'; // Use PUT for editing
+                            url = `${API_BASE_URL}/goals/${goalId}`;
+                        }
+
+                        // API Call: POST/PUT /api/goals
+                        await apiFetch(url, {
+                            method: method,
+                            body: JSON.stringify(goalData)
+                        });
+                        
+                        document.getElementById('goal-form').reset();
+                        window.closeGoalModal();
+                        await fetchDataAndRender(); // Fetch and re-render goal data
+                        window.setView('Goals'); 
+                        
+                    } catch (error) {
+                        alert(`Error saving goal: ${error.message}`);
+                    }
+                });
+            }
+        });
+        
+        // --- MOCK LMS FUNCTIONS ---
+        window.buyCourse = (courseId) => {
+            alert('Buying course... (Client-side mock)');
+            const course = window.courses.find(c => c.id == courseId);
+            if (course) {
+                course.isBought = true;
+                window.currentCourseId = courseId;
+                window.setView('Lecture View'); 
+            }
+        };
+
+
+        // --- RENDERING FUNCTIONS ---
+        
+        const renderAuthStatus = () => {
+            const profileSection = document.getElementById('user-profile-section');
+            if (!profileSection) return;
+
+            if (window.authToken) {
+                profileSection.innerHTML = `
+                    <div class="flex items-center p-3 bg-gray-800 rounded-xl mb-3">
+                        <i data-lucide="user" class="text-green-400 mr-3 w-6 h-6"></i>
+                        <div>
+                            <p class="text-sm font-semibold text-white">${window.username}</p>
+                            <p class="text-xs text-gray-400">Logged in</p>
+                        </div>
+                    </div>
+                    <button onclick="handleLogout()" class="w-full py-2 px-4 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition">
+                        Logout
+                    </button>
+                `;
+            } else {
+                profileSection.innerHTML = `
+                    <p class="text-sm text-gray-400 mb-2">Access your hub!</p>
+                    <button onclick="openLoginModal()" class="w-full py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition mb-2">
+                        Login
+                    </button>
+                    <button onclick="openSignupModal()" class="w-full py-2 px-4 bg-gray-700 hover:bg-gray-600 text-indigo-400 rounded-lg font-semibold transition">
+                        Create Account
+                    </button>
+                `;
+            }
+            lucide.createIcons();
+        };
+
+        window.setView = (viewName, id = null) => {
+            activeView = viewName;
+            currentCourseId = null;
+            currentGoalId = null;
+
+            if (viewName === 'Course Details' || viewName === 'Lecture View') {
+                currentCourseId = id;
+            } else if (viewName === 'Goal Details') {
+                currentGoalId = id;
+            }
+            
+            isSidebarOpen = false; 
+            renderApp();
+        };
+
+        const renderApp = () => {
+            renderSidebar();
+            renderAuthStatus();
+            
+            const contentElement = document.getElementById('main-content');
+            const mobileTitleElement = document.getElementById('mobile-view-title');
+            mobileTitleElement.textContent = activeView;
+
+            let htmlContent = '';
+            
+            if (!window.authToken) {
+                htmlContent = `
+                    <div class="p-6 h-full flex flex-col items-center justify-center text-center bg-gray-900">
+                        <i data-lucide="lock" class="w-16 h-16 text-indigo-500 mb-4"></i>
+                        <h1 class="text-4xl font-extrabold text-white mb-3">Welcome to REGRET HUB</h1>
+                        <p class="text-lg text-gray-400 mb-8 max-w-lg">
+                            Your secure, hierarchical task and goal management system. Log in or sign up to connect your daily tasks to your long-term academic success.
+                        </p>
+                        <div class="flex space-x-4">
+                            <button onclick="openLoginModal()" class="py-3 px-6 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold shadow-xl transition">
+                                Log In Now
+                            </button>
+                            <button onclick="openSignupModal()" class="py-3 px-6 bg-gray-700 hover:bg-gray-600 text-indigo-400 rounded-lg font-semibold transition">
+                                Create Free Account
+                            </button>
+                        </div>
+                        <div class="mt-8 text-xs text-gray-500">
+                            Backend Status: ${window.userId ? 'Authenticated' : 'Awaiting Authentication'} (Connects to http://localhost:5000)
+                        </div>
+                    </div>
+                `;
+            } else {
+                switch (activeView) {
+                    case 'Dashboard':
+                        htmlContent = renderDashboard();
+                        break;
+                    case 'My Tasks':
+                        htmlContent = renderTasks();
+                        break;
+                    case 'Courses':
+                        htmlContent = renderCourseCatalog();
+                        break;
+                    case 'Course Details':
+                        htmlContent = renderCourseDetails(currentCourseId);
+                        break;
+                    case 'Lecture View':
+                        htmlContent = renderLectureView(currentCourseId);
+                        break;
+                    case 'Goals':
+                        htmlContent = renderGoals();
+                        break;
+                    case 'Goal Details':
+                        htmlContent = renderGoalDetails(currentGoalId);
+                        break;
+                    case 'Content Library':
+                        htmlContent = renderContentLibrary();
+                        break;
+                    default:
+                        htmlContent = renderDashboard();
+                        break;
+                }
+            }
+
+            contentElement.innerHTML = htmlContent;
+            lucide.createIcons();
+            
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar) {
+                if (isSidebarOpen) {
+                    sidebar.classList.remove('-translate-x-full');
+                } else {
+                    sidebar.classList.add('-translate-x-full');
+                }
+            }
+        };
+
+        const renderSidebar = () => {
+            const navLinksContainer = document.getElementById('nav-links');
+            let linksHtml = '';
+            navigation.forEach(item => {
+                const isCourseActive = item.name === 'Courses' && (activeView.includes('Course'));
+                const isGoalActive = item.name === 'Goals' && (activeView.includes('Goal'));
+                const isActive = (activeView === item.name) || isCourseActive || isGoalActive;
+                
+                linksHtml += `
+                    <button
+                        onclick="setView('${item.name}')"
+                        class="w-full flex items-center px-4 py-3 rounded-xl font-medium transition duration-200 ${
+                            isActive
+                                ? 'bg-indigo-700 text-white shadow-lg'
+                                : 'text-gray-300 hover:bg-gray-800 hover:text-indigo-400'
+                        }"
+                        ${!window.authToken ? 'disabled' : ''}
+                    >
+                        <i data-lucide="${item.icon}" class="w-5 h-5 mr-3"></i>
+                        ${item.name}
+                    </button>
+                `;
+            });
+            navLinksContainer.innerHTML = linksHtml;
+        };
+
+        // --- HELPER RENDERING FUNCTIONS ---
+        const renderStat = (icon, title, value, className = '') => `
+            <div class="p-5 bg-gray-800 rounded-xl shadow-lg border-b-4 border-indigo-500 flex items-center space-x-4 ${className}">
+                <div class="p-3 rounded-full bg-gray-700 text-indigo-400">
+                    <i data-lucide="${icon}" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <div class="text-sm font-medium text-gray-400">${title}</div>
+                    <div class="text-3xl font-bold text-white">${value}</div>
+                </div>
+            </div>
+        `;
+
+        const renderCourseCard = (course) => `
+            <div class="p-5 bg-gray-700 rounded-xl shadow-lg hover:shadow-xl transition duration-300">
+                <h3 class="text-xl font-semibold text-white mb-2 truncate">${course.title}</h3>
+                <div class="text-sm text-gray-400 mb-4">
+                    ${course.completedLectures} / ${course.totalLectures} Lectures Completed
+                </div>
+                
+                <div class="flex items-center space-x-3 mb-4">
+                    <div class="flex-1 h-3 bg-gray-600 rounded-full">
+                    <div class="h-full bg-green-500 rounded-full transition-all duration-700" style="width: ${course.progress}%;"></div>
+                    </div>
+                    <span class="text-sm font-medium text-white">${course.progress}%</span>
+                </div>
+
+                <div class="text-xs text-gray-500 bg-gray-800 p-2 rounded-lg border border-gray-700">
+                    <span class="font-semibold text-indigo-400">Next Up:</span> ${course.nextUp}
+                </div>
+
+                <button onclick="setView('Lecture View', ${course.id})" class="mt-4 w-full py-2 text-sm bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition">
+                    Continue Learning <i data-lucide="chevron-right" class="inline ml-1 w-4 h-4"></i>
+                </button>
+            </div>
+        `;
+
+        // --- DASHBOARD RENDERING ---
+        const renderDashboard = () => {
+            const pendingTasks = window.tasks.filter(t => !t.completed);
+            const goalProgresses = window.goals.map(g => g.progress);
+            const avgGoalProgress = goalProgresses.length > 0 ? Math.round(goalProgresses.reduce((a, b) => a + b) / goalProgresses.length) : 0;
+            const totalCompletedTasks = window.tasks.filter(t => t.completed).length;
+            const highPriorityTasks = pendingTasks.filter(t => t.priority === 'High').length;
+            const today = new Date().toISOString().split('T')[0];
+            const tasksDueToday = pendingTasks.filter(t => t.date === today && !t.goalId); // Only standalone tasks due today
+
+            const boughtCourses = window.courses.filter(c => c.isBought);
+            const overallProgress = boughtCourses.length > 0 
+                ? Math.round(boughtCourses.reduce((sum, c) => sum + c.progress, 0) / boughtCourses.length) 
+                : 0;
+            
+            const renderGoalCard = (goal) => {
+                return `
+                    <button onclick="setView('Goal Details', '${goal.id}')" class="w-full text-left flex items-center p-4 bg-gray-700 rounded-lg shadow-md border-l-4 border-indigo-500 hover:bg-gray-600 transition">
+                        <div class="flex-1 min-w-0">
+                            <h3 class="text-lg font-semibold text-white truncate">${goal.title}</h3>
+                            <p class="text-xs text-gray-400">Target: ${new Date(goal.targetDate).toLocaleDateString()}</p>
+                            <div class="h-2 bg-gray-600 rounded-full mt-2">
+                                <div class="h-full bg-green-500 rounded-full transition-all duration-700" style="width: ${goal.progress}%;"></div>
+                            </div>
+                            <p class="text-xs font-bold text-gray-300 mt-1">${goal.progress}% Complete</p>
+                        </div>
+                    </button>
+                `;
+            };
+
+            const tasksDueTodayHtml = tasksDueToday.length > 0 ? tasksDueToday.map(task => `
+                <div class="text-sm p-3 bg-gray-700 rounded-lg flex justify-between items-center border-l-4 border-yellow-500">
+                    <span class="text-gray-200 truncate">${task.title}</span>
+                    <span class="text-gray-400 text-xs">${task.time || 'N/A'}</span>
+                </div>
+            `).join('') : '<p class="text-gray-500 text-center">No standalone tasks scheduled for today. Great job!</p>';
+
+
+            return `
+                <div class="p-6 space-y-8">
+                    <h1 class="text-3xl font-extrabold text-white mb-6">👋 Welcome Back, ${window.username}!</h1>
+
+                    <section class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        ${renderStat('target', 'Avg. Goal Progress', `${avgGoalProgress}%`)}
+                        ${renderStat('book-open', 'Enrolled Course Avg.', `${overallProgress}%`)}
+                        ${renderStat('check-circle', 'Tasks Completed', totalCompletedTasks)}
+                        ${renderStat('clock', 'Daily Tasks Due', tasksDueToday.length)}
+                    </section>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <section class="lg:col-span-2 bg-gray-800 p-6 rounded-xl shadow-xl space-y-4">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-xl font-bold text-indigo-400 flex items-center"><i data-lucide="target" class="w-5 h-5 mr-2"></i> My Active Goals</h2>
+                                <button onclick="openGoalModal()" class="text-sm text-gray-400 hover:text-indigo-400 transition">Define New Goal <i data-lucide="chevron-right" class="inline ml-1 w-4 h-4"></i></button>
+                            </div>
+                            <div class="space-y-4 max-h-96 overflow-y-auto custom-scrollbar pr-2">
+                                ${window.goals.slice(0, 5).map(renderGoalCard).join('') || '<p class="text-center text-gray-500 pt-4">No goals defined yet. Define one!</p>'}
+                            </div>
+                        </section>
+
+                        <section class="lg:col-span-1 space-y-6">
+                            <div class="bg-indigo-900/30 p-6 rounded-xl shadow-xl border border-indigo-700">
+                                <h2 class="text-xl font-bold text-indigo-400 mb-4">Quick Actions</h2>
+                                <button onclick="openTaskModal()" class="w-full flex items-center justify-center py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-lg transition duration-200 transform hover:scale-[1.01]">
+                                    <i data-lucide="plus" class="w-5 h-5 mr-2"></i> Add New Daily Task
+                                </button>
+                            </div>
+                            
+                            <div class="bg-gray-800 p-6 rounded-xl shadow-xl">
+                                <h2 class="text-xl font-bold text-gray-200 mb-4">Daily Tasks Due (${tasksDueToday.length})</h2>
+                                <div class="space-y-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                                    ${tasksDueTodayHtml}
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+
+                    <section class="bg-gray-800 p-6 rounded-xl shadow-xl">
+                        <h2 class="text-xl font-bold text-green-400 mb-4 flex items-center"><i data-lucide="book-open" class="w-5 h-5 mr-2"></i> Enrolled Courses (Mock)</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                            ${boughtCourses.map(renderCourseCard).join('')}
+                        </div>
+                        ${boughtCourses.length === 0 ? '<p class="text-center text-gray-400 pt-4">You have not enrolled in any courses yet. <button onclick="setView(\'Courses\')" class="text-indigo-400 hover:text-indigo-300">Browse Catalog</button></p>' : ''}
+                    </section>
+                </div>
+            `;
+        };
+        
+        // --- TASKS RENDERING (UPDATED FILTER) ---
+        const renderTasks = () => {
+            // FIX: Filter out tasks that are linked to a goal (goalId != null)
+            const allDailyTasks = window.tasks.filter(t => t.goalId === null);
+            const pendingTasks = allDailyTasks.filter(t => !t.completed).sort((a, b) => new Date(a.date) - new Date(b.date));
+            const completedTasks = allDailyTasks.filter(t => t.completed);
+
+            const getPriorityColor = (priority) => {
+                switch (priority) {
+                    case 'High': return 'text-red-400 bg-red-900/50 border-red-500';
+                    case 'Medium': return 'text-yellow-400 bg-yellow-900/50 border-yellow-500';
+                    case 'Low': return 'text-green-400 bg-green-900/50 border-green-500';
+                    default: return 'text-gray-400 bg-gray-700 border-indigo-500';
+                }
+            };
+
+            const renderSubTask = (task, subTask) => {
+                const buttonBg = subTask.completed ? 'bg-green-500 border-green-500' : 'border-gray-500 text-transparent hover:bg-gray-700 hover:border-indigo-400';
+                const titleClass = subTask.completed ? 'line-through text-gray-500' : 'text-gray-300';
+
+                return `
+                    <div class="flex items-center text-sm p-2 rounded-lg bg-gray-700/50 hover:bg-gray-700 transition">
+                        <button onclick="toggleTaskCompletion('${task.id}', '${subTask.id}')" class="w-5 h-5 mr-3 flex items-center justify-center rounded-full border transition-colors ${buttonBg}">
+                            ${subTask.completed ? '<i data-lucide="check" class="w-3 h-3 text-white"></i>' : ''}
+                        </button>
+                        <span class="${titleClass} flex-1">${subTask.title}</span>
+                    </div>
+                `;
+            };
+
+            const renderTaskCard = (task) => {
+                const completedClass = task.completed ? 'line-through text-gray-500 opacity-70 border-green-500' : `border-indigo-500`;
+                const titleClass = task.completed ? 'line-through text-gray-500' : 'text-gray-100';
+                const buttonBg = task.completed ? 'bg-green-500 border-green-500' : 'border-gray-500 text-transparent hover:bg-gray-700 hover:border-indigo-400';
+                const priorityClasses = getPriorityColor(task.priority);
+                
+                let subTaskStatus = '';
+                if (task.subTasks && task.subTasks.length > 0) {
+                    const completed = task.subTasks.filter(st => st.completed).length;
+                    subTaskStatus = `<span class="text-xs text-yellow-300 ml-2">(${completed}/${task.subTasks.length} sub-tasks)</span>`;
+                }
+
+                return `
+                    <div class="p-4 bg-gray-800 rounded-xl shadow-lg border-l-4 ${completedClass} flex flex-col transition duration-300 hover:bg-gray-700/70">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center mb-1">
+                                    <button onclick="toggleTaskCompletion('${task.id}')" class="w-6 h-6 mr-3 flex items-center justify-center rounded-full border-2 transition-colors ${buttonBg}">
+                                        ${task.completed ? '<i data-lucide="check-circle" class="w-4 h-4 fill-white text-white"></i>' : ''}
+                                    </button>
+                                    <h3 class="text-lg font-semibold truncate ${titleClass} flex items-center">
+                                        ${task.title}
+                                        ${subTaskStatus}
+                                    </h3>
+                                </div>
+                                
+                                <p class="text-sm text-gray-400 mb-2 whitespace-normal overflow-wrap break-word">${task.description || 'No detailed description.'}</p>
+                                
+                                <div class="flex flex-wrap items-center text-xs space-x-3 mt-2">
+                                    <span class="px-2 py-0.5 rounded-full font-medium ${priorityClasses}">
+                                        ${task.priority} Priority
+                                    </span>
+                                </div>
+
+                                <div class="mt-2 flex items-center justify-between text-sm text-gray-500">
+                                    <div class="flex items-center space-x-4">
+                                        <div class="flex items-center">
+                                            <i data-lucide="calendar" class="w-4 h-4 mr-1 text-indigo-400"></i>
+                                            <span>${new Date(task.date).toLocaleDateString()}</span>
+                                        </div>
+                                        ${task.time ? `
+                                        <div class="flex items-center">
+                                            <i data-lucide="clock" class="w-4 h-4 mr-1 text-indigo-400"></i>
+                                            <span>${task.time}</span>
+                                        </div>
+                                        ` : ''}
+                                    </div>
+                                    <button onclick="deleteTask('${task.id}', '${task.title}')" class="text-red-400 hover:text-red-300 transition p-1 rounded-lg hover:bg-gray-700">
+                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        ${task.subTasks && task.subTasks.length > 0 ? `
+                            <div class="mt-4 p-3 bg-gray-700 rounded-lg space-y-2 border border-gray-600">
+                                <p class="text-sm font-semibold text-gray-300">Sub-Tasks / Deep Details:</p>
+                                <div class="space-y-2">
+                                    ${task.subTasks.map(st => renderSubTask(task, st)).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            };
+
+            const pendingHtml = pendingTasks.length > 0 ? `
+                <section class="mb-8">
+                    <h2 class="text-xl font-bold text-gray-200 mb-4 border-b border-gray-700 pb-2">Pending Daily Tasks (${pendingTasks.length})</h2>
+                    <p class="text-sm text-gray-500 mb-4">Tasks linked to a Goal are only shown on the Goal Details page.</p>
+                    <div class="space-y-4">
+                        ${pendingTasks.map(renderTaskCard).join('')}
+                    </div>
+                </section>
+            ` : '';
+
+            const completedHtml = completedTasks.length > 0 ? `
+                <section>
+                    <h2 class="text-xl font-bold text-gray-200 mb-4 border-b border-gray-700 pb-2">Completed Daily Tasks (${completedTasks.length})</h2>
+                    <div class="space-y-4 opacity-70">
+                        ${completedTasks.map(renderTaskCard).join('')}
+                    </div>
+                </section>
+            ` : '';
+            
+            const emptyState = window.tasks.length === 0 ? `
+                 <div class="text-center p-10 bg-gray-800 rounded-xl mt-10">
+                    <p class="text-gray-400">No tasks yet! Click "Add New Task" to start managing your daily activities.</p>
+                </div>
+            ` : '';
+
+            return `
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h1 class="text-3xl font-extrabold text-white">Daily Task Tracker</h1>
+                        <button onclick="openTaskModal()" class="flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-lg transition duration-200">
+                            <i data-lucide="plus" class="w-5 h-5 mr-2"></i> Add New Task
+                        </button>
+                    </div>
+                    ${pendingHtml}
+                    ${completedHtml}
+                    ${emptyState}
+                </div>
+            `;
+        };
+        
+        // --- COURSE RENDERING ---
+        const renderCourseCatalog = () => {
+            const courseCardsHtml = window.courses.map(course => `
+                <div class="bg-gray-800 rounded-xl shadow-lg overflow-hidden transition duration-300 hover:ring-2 hover:ring-indigo-500">
+                    <img src="${course.image}" alt="${course.title}" class="w-full h-40 object-cover" onerror="this.onerror=null; this.src='https://placehold.co/400x200/1e293b/d1d5db?text=Course+Image';" />
+                    <div class="p-5">
+                        <h3 class="text-xl font-semibold text-white mb-2 truncate">${course.title}</h3>
+                        <p class="text-sm text-gray-400 mb-4 h-12 overflow-hidden">${course.description.substring(0, 70)}...</p>
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-lg font-bold ${course.isBought ? 'text-green-400' : 'text-indigo-400'}">${course.isBought ? 'Enrolled' : `₹${course.price}`}</span>
+                            <span class="text-xs text-gray-500">${course.totalLectures} Lectures}</span>
+                        </div>
+                        <button onclick="setView('Course Details', ${course.id})" class="w-full py-2 text-sm ${course.isBought ? 'bg-green-600 hover:bg-green-700' : 'bg-indigo-600 hover:bg-indigo-700'} text-white rounded-lg transition">
+                            ${course.isBought ? 'View Content' : 'View Details & Buy'} <i data-lucide="chevron-right" class="inline ml-1 w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            return `
+                <div class="p-6">
+                    <h1 class="text-3xl font-extrabold text-white mb-6">Course Catalog <i data-lucide="layers" class="inline w-6 h-6 text-indigo-400"></i></h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        ${courseCardsHtml}
+                    </div>
+                </div>
+            `;
+        };
+        
+        const renderCourseDetails = (courseId) => {
+            const course = window.courses.find(c => c.id == courseId);
+            if (!course) return `<div class="p-6 text-center text-red-400">Course not found.</div>`;
+
+            const actionButton = course.isBought 
+                ? `<button onclick="setView('Lecture View', ${course.id})" class="w-full py-3 px-4 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-lg transition transform hover:scale-[1.01]">
+                       Start Learning <i data-lucide="book-open" class="inline ml-2 w-5 h-5"></i>
+                   </button>`
+                : `<button onclick="buyCourse(${course.id})" class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-lg transition transform hover:scale-[1.01]">
+                       Buy Now for ₹${course.price} <i data-lucide="credit-card" class="inline ml-2 w-5 h-5"></i>
+                   </button>`;
+
+            const modulesHtml = course.modules.map((mod, index) => `
+                <li class="p-4 bg-gray-700 rounded-lg flex justify-between items-center border-l-4 border-indigo-500">
+                    <span class="text-gray-200 font-medium">${index + 1}. ${mod.title}</span>
+                    <span class="text-sm text-gray-400">${mod.lectures} Lectures}</span>
+                </li>
+            `).join('');
+
+            return `
+                <div class="p-6 max-w-5xl mx-auto">
+                    <button onclick="setView('Courses')" class="text-indigo-400 hover:text-indigo-300 mb-4 flex items-center">
+                        <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i> Back to Catalog
+                    </button>
+                    
+                    <div class="bg-gray-800 rounded-xl shadow-2xl overflow-hidden">
+                        <img src="${course.image}" alt="${course.title}" class="w-full h-56 object-cover" onerror="this.onerror=null; this.src='https://placehold.co/800x400/1e293b/d1d5db?text=Course+Image';" />
+                        
+                        <div class="p-8">
+                            <h1 class="text-4xl font-extrabold text-white mb-3">${course.title}</h1>
+                            <p class="text-gray-400 text-lg mb-6">${course.description}</p>
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                                <div class="p-4 bg-gray-700 rounded-lg text-center"><span class="block text-sm text-gray-400">Total Lectures</span><span class="text-2xl font-bold text-indigo-400">${course.totalLectures}</span></div>
+                                <div class="p-4 bg-gray-700 rounded-lg text-center"><span class="block text-sm text-gray-400">Status</span><span class="text-2xl font-bold ${course.isBought ? 'text-green-400' : 'text-red-400'}">${course.isBought ? 'Enrolled' : 'Not Enrolled'}</span></div>
+                                <div class="p-4 bg-gray-700 rounded-lg text-center"><span class="block text-sm text-gray-400">Price</span><span class="text-2xl font-bold text-yellow-400">${course.isBought ? 'FREE' : `₹${course.price}`}</span></div>
+                            </div>
+
+                            <h2 class="text-2xl font-bold text-indigo-400 mb-4">Course Curriculum</h2>
+                            <ul class="space-y-3 mb-8">
+                                ${modulesHtml}
+                            </ul>
+
+                            ${actionButton}
+                        </div>
+                    </div>
+                </div>
+            `;
+        };
+
+        const renderLectureView = (courseId) => {
+            const course = window.courses.find(c => c.id == courseId);
+            if (!course || !course.isBought) return `<div class="p-6 text-center text-red-400">Please enroll in the course to view content.</div>`;
+
+            const contentHtml = `
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="aspect-video bg-black rounded-xl shadow-xl overflow-hidden">
+                        <div class="w-full h-full flex items-center justify-center bg-gray-900">
+                            <p class="text-xl text-indigo-400">Video Player for: ${course.nextUp}</p>
+                        </div>
+                    </div>
+                    <div class="bg-gray-800 p-6 rounded-xl shadow-xl">
+                        <h2 class="text-2xl font-bold text-white mb-3">${course.nextUp}</h2>
+                        <p class="text-gray-400">Lecture notes and description will be displayed here. Focus: Redux store setup and basic actions.</p>
+                        <button class="mt-4 py-2 px-4 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition">
+                            Mark as Complete <i data-lucide="check" class="inline ml-1 w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="lg:col-span-1 space-y-4">
+                    <div class="bg-gray-800 p-6 rounded-xl shadow-xl">
+                        <h3 class="text-xl font-bold text-indigo-400 mb-4">Course Modules</h3>
+                        <ul class="space-y-3">
+                            ${course.modules.map(mod => `
+                                <li class="text-gray-300 border-l-4 ${mod.title.includes('Node') ? 'border-yellow-500' : 'border-gray-700'} pl-3">
+                                    ${mod.title} (${mod.lectures} L)
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                    <div class="bg-gray-800 p-6 rounded-xl shadow-xl">
+                        <h3 class="text-xl font-bold text-indigo-400 mb-4">Course Progress</h3>
+                        <p class="text-4xl font-bold text-green-400">${course.progress}%</p>
+                        <div class="h-3 bg-gray-600 rounded-full mt-2">
+                            <div class="h-full bg-green-500 rounded-full" style="width: ${course.progress}%;"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            return `
+                <div class="p-6">
+                    <button onclick="setView('Dashboard')" class="text-indigo-400 hover:text-indigo-300 mb-4 flex items-center">
+                        <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i> Back to Dashboard
+                    </button>
+                    <h1 class="text-3xl font-extrabold text-white mb-6">${course.title} Content</h1>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        ${contentHtml}
+                    </div>
+                </div>
+            `;
+        };
+
+        // --- GOALS RENDERING ---
+        
+        const renderGoals = () => {
+             const goalListHtml = window.goals.map(goal => {
+                return `
+                    <button onclick="setView('Goal Details', '${goal.id}')" class="w-full text-left p-6 bg-gray-800 rounded-xl shadow-lg hover:ring-2 hover:ring-indigo-500 transition duration-300">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h2 class="text-2xl font-bold text-indigo-400">${goal.title}</h2>
+                                <span class="text-xs font-medium py-0.5 px-2 rounded-full bg-gray-700 text-gray-300">${goal.category}</span>
+                            </div>
+                            <span class="text-sm font-medium py-1 px-3 rounded-full ${goal.progress < 50 ? 'bg-yellow-900/50 text-yellow-400' : 'bg-green-900/50 text-green-400'}">${goal.status}</span>
+                        </div>
+                        <p class="text-gray-400 text-sm mb-4">${goal.description}</p>
+                        
+                        <div class="p-4 bg-gray-700 rounded-lg shadow-md border-l-4 border-indigo-500">
+                            <div class="h-2 bg-gray-600 rounded-full mt-2 mb-2">
+                                <div class="h-full bg-green-500 rounded-full transition-all duration-700" style="width: ${goal.progress}%;"></div>
+                            </div>
+                            <p class="text-lg font-bold text-white mt-2">${goal.progress}% Complete</p>
+                            <p class="text-sm text-gray-400">Target Date: ${new Date(goal.targetDate).toLocaleDateString()}</p>
+                        </div>
+                    </button>
+                `;
+            }).join('');
+
+            return `
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h1 class="text-3xl font-extrabold text-white">Learning Paths & Goals</h1>
+                        <button onclick="openGoalModal()" class="py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition">
+                            <i data-lucide="plus" class="w-4 h-4 inline mr-1"></i> Define New Goal
+                        </button>
+                    </div>
+                    <div class="space-y-6">
+                        ${goalListHtml || '<p class="text-center text-gray-400 pt-10">No learning paths defined yet. Create a goal to structure your learning!</p>'}
+                    </div>
+                </div>
+            `;
+        };
+        
+        /** Generates HTML for the Deep Goal Details View. */
+        const renderGoalDetails = (goalId) => {
+            const goal = window.goals.find(g => g.id == goalId);
+            if (!goal) return `<div class="p-6 text-center text-red-400">Goal not found.</div>`;
+
+            const renderLesson = (chapterId, lesson) => {
+                const buttonBg = lesson.completed ? 'bg-green-500 border-green-500' : 'border-gray-500 hover:bg-gray-700 hover:border-indigo-400';
+                const titleClass = lesson.completed ? 'line-through text-gray-500' : 'text-gray-300';
+                
+                return `
+                    <div class="flex items-start text-base p-3 rounded-lg bg-gray-700/50 hover:bg-gray-700 transition">
+                        <button onclick="toggleLessonCompletion('${goal.id}', '${chapterId}', '${lesson.id}')" class="w-5 h-5 mr-3 mt-1 flex items-center justify-center rounded-full border-2 transition-colors ${buttonBg} flex-shrink-0">
+                            ${lesson.completed ? '<i data-lucide="check" class="w-3 h-3 text-white"></i>' : ''}
+                        </button>
+                        <div class="flex-1">
+                            <span class="${titleClass} font-medium">${lesson.title}</span>
+                            ${lesson.notes ? `<p class="text-xs text-gray-500 mt-1">${lesson.notes}</p>` : ''}
+                        </div>
+                    </div>
+                `;
+            };
+
+            const chaptersHtml = goal.chapters.sort((a, b) => a.order - b.order).map(chapter => {
+                const completedLessons = chapter.lessons.filter(l => l.completed).length;
+                const totalLessons = chapter.lessons.length;
+                const chapterProgress = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+                
+                return `
+                    <div class="bg-gray-700 rounded-xl shadow-lg overflow-hidden border border-gray-600">
+                        <div class="p-4 bg-gray-600/70 flex justify-between items-center">
+                            <h3 class="text-xl font-bold text-white">${chapter.order + 1}. ${chapter.title}</h3>
+                            <span class="text-sm font-semibold text-indigo-300">${chapterProgress}% (${completedLessons}/${totalLessons})</span>
+                        </div>
+                        <div class="p-4 space-y-2">
+                            ${chapter.lessons.map(lesson => renderLesson(chapter.id, lesson)).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+
+            return `
+                <div class="p-6">
+                    <button onclick="setView('Goals')" class="text-indigo-400 hover:text-indigo-300 mb-4 flex items-center">
+                        <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i> Back to Learning Paths
+                    </button>
+
+                    <div class="bg-gray-800 rounded-xl shadow-2xl p-8 space-y-8">
+                        <div class="flex justify-between items-start border-b border-gray-700 pb-4">
+                            <div>
+                                <h1 class="text-4xl font-extrabold text-white">${goal.title}</h1>
+                                <p class="text-lg text-gray-400 mt-1">${goal.description}</p>
+                            </div>
+                            <div class="flex flex-col items-end space-y-2">
+                                <span class="text-sm font-medium py-1 px-3 rounded-full bg-indigo-900/50 text-indigo-300">Target: ${new Date(goal.targetDate).toLocaleDateString()}</span>
+                                <div class="flex space-x-2">
+                                    <button onclick="openGoalModal(window.goals.find(g => g.id === '${goal.id}'))" class="text-sm text-yellow-400 hover:text-yellow-300 flex items-center">
+                                        <i data-lucide="edit" class="w-4 h-4 mr-1"></i> Edit
+                                    </button>
+                                    <button onclick="deleteGoal('${goal.id}', '${goal.title}')" class="text-sm text-red-400 hover:text-red-300 flex items-center">
+                                        <i data-lucide="trash-2" class="w-4 h-4 mr-1"></i> Delete
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="md:col-span-2 p-6 bg-gray-700 rounded-xl shadow-inner border border-indigo-500/50">
+                                <h2 class="text-xl font-bold text-green-400 mb-3">Overall Progress</h2>
+                                <div class="h-4 bg-gray-600 rounded-full mb-3">
+                                    <div class="h-full bg-green-500 rounded-full transition-all duration-1000" style="width: ${goal.progress}%;"></div>
+                                </div>
+                                <p class="text-3xl font-extrabold text-white">${goal.progress}% Complete</p>
+                                <p class="text-sm text-gray-400 mt-1">Status: ${goal.status} | Category: ${goal.category}</p>
+                            </div>
+                            <div class="p-6 bg-indigo-900/30 rounded-xl shadow-inner border border-indigo-700">
+                                <h2 class="text-xl font-bold text-indigo-400 mb-4">Quick Links</h2>
+                                <button onclick="setView('My Tasks')" class="w-full py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition">
+                                    <i data-lucide="check-circle" class="w-4 h-4 inline mr-1"></i> Daily Tasks
+                                </button>
+                                <button onclick="openTaskModal()" class="w-full py-2 px-4 mt-2 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-lg transition">
+                                    <i data-lucide="plus" class="w-4 h-4 inline mr-1"></i> Add Daily Task
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="pt-4">
+                            <h2 class="text-2xl font-bold text-gray-200 mb-4">Learning Chapters & Lessons</h2>
+                            <div class="space-y-6">
+                                ${chaptersHtml || '<p class="text-gray-400 text-center p-4 bg-gray-700 rounded-lg">No Chapters have been defined for this learning path.</p>'}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        };
+
+
+        /** Generates HTML for the Content Library View. */
+        const renderContentLibrary = () => {
+            const contentItems = ['React Notes (PDF)', 'Express Tutorials', 'DBMS Cheatsheet', 'MERN Project Videos'];
+            const contentHtml = contentItems.map(item => `
+                <div class="p-4 bg-gray-800 rounded-xl flex justify-between items-center hover:bg-gray-700 transition">
+                    <span class="text-lg text-gray-200">${item}</span>
+                    <button class="text-indigo-400 hover:text-indigo-300">
+                        Access <i data-lucide="chevron-right" class="w-4 h-4 inline ml-1"></i>
+                    </button>
+                </div>
+            `).join('');
+
+            return `
+                <div class="p-6">
+                    <h1 class="text-3xl font-extrabold text-white mb-6">Notes & Lecture Access</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        ${contentHtml}
+                    </div>
+                    <div class="mt-10 p-6 bg-yellow-900/30 rounded-xl border border-yellow-700 text-center">
+                        <p class="text-yellow-300">All purchased course content and personal notes are stored securely here (Mock Content).</p>
+                    </div>
+                </div>
+            `;
+        };
+
+        // --- Auth Modal Functions (Unchanged) ---
+        window.openLoginModal = () => { 
+            document.getElementById('login-modal').classList.remove('hidden');
+            document.getElementById('login-modal-content').classList.remove('scale-95', 'opacity-0');
+            document.getElementById('login-modal-content').classList.add('scale-100', 'opacity-100');
+        };
+        window.closeLoginModal = () => { 
+            const content = document.getElementById('login-modal-content');
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                document.getElementById('login-modal').classList.add('hidden');
+                document.getElementById('login-form').reset();
+            }, 300); 
+        };
+        window.openSignupModal = () => { 
+            document.getElementById('signup-modal').classList.remove('hidden');
+            document.getElementById('signup-modal-content').classList.remove('scale-95', 'opacity-0');
+            document.getElementById('signup-modal-content').classList.add('scale-100', 'opacity-100');
+        };
+        window.closeSignupModal = () => { 
+            const content = document.getElementById('signup-modal-content');
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                document.getElementById('signup-modal').classList.add('hidden');
+                document.getElementById('signup-form').reset();
+            }, 300); 
+        };
+        
+        // --- INITIALIZATION ---
+        fetchDataAndRender(); 
+    </script>
+</body>
+</html>
