@@ -9,17 +9,28 @@ const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const goalRoutes = require('./routes/goalRoutes');
 const taskRoutes = require('./routes/taskRoutes'); 
+// const courseRoutes = require('./routes/courseRoutes'); // Keep this commented if not implemented
 
 // --- Configuration ---
 const app = express();
 const PORT = process.env.PORT || 5000;
+// Define the allowed origin from .env
+const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN;
 
 // Connect to Database
 connectDB();
 
 // --- Middleware ---
-// Enable CORS for the frontend (allowing all origins for now)
-app.use(cors());
+
+// FIX: Configure CORS to restrict access to only your frontend URL
+const corsOptions = {
+    origin: ALLOWED_ORIGIN,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true, // Allows cookies/auth headers to be sent
+    optionsSuccessStatus: 200 
+}
+app.use(cors(corsOptions)); 
+
 // Body parser for JSON requests
 app.use(express.json());
 
@@ -30,6 +41,7 @@ app.use('/api/auth', authRoutes);
 // 2. Protected Data Routes (Require JWT middleware 'protect')
 app.use('/api/goals', goalRoutes);
 app.use('/api/tasks', taskRoutes);
+// app.use('/api/courses', courseRoutes); // Uncomment when ready
 
 // --- Basic Health Check Route ---
 app.get('/', (req, res) => {
@@ -37,7 +49,8 @@ app.get('/', (req, res) => {
         message: 'REGRET Backend API is running successfully!',
         status: 'OK',
         database: mongoose.STATES[mongoose.connection.readyState],
-        api_endpoints: ['/api/auth/signup', '/api/auth/login', '/api/goals', '/api/tasks']
+        api_endpoints: ['/api/auth/signup', '/api/auth/login', '/api/goals', '/api/tasks'],
+        allowed_origin: ALLOWED_ORIGIN || 'ALL (*)'
     });
 });
 
